@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Exportar csv</h1>
+    <table id="dataTable" class="table">
+        <thead>
+            <tr>
+                <th>dato1</th>
+                <th>dato2</th>
+                <th>dato3</th>
+                <th>dato4</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>esto</td>
+                <td>no</td>
+                <td>abre</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>esto</td>
+                <td>si</td>
+                <td>abre</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>esto</td>
+                <td>no</td>
+                <td>funciona</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>esto</td>
+                <td>si</td>
+                <td>funciona</td>
+            </tr>
+        </tbody>
+    </table>
+    <button id="btnexport" type="button" class="button">Exportar csv</button>
+    <a href="javascript:callme()" type="button">Exportar pdf</a>
+    <script>
+        const dataTable = document.getElementById("dataTable");
+
+        const btnexport = document.getElementById("btnexport");
+
+        btnexport.addEventListener("click", () => {
+            const exporter = new TableCsvExport(dataTable, false);
+            const csvOutput = exporter.convertTocsv();
+            const csvBlob = new Blob([csvOutput], {
+                type: "text/csv"
+            });
+            const blobUrl = URL.createObjectURL(csvBlob);
+            const anchorElement = document.createElement("a");
+
+            anchorElement.href = blobUrl;
+            anchorElement.download = "table-export.csv";
+            anchorElement.click();
+
+            setTimeout(() => {
+                URL.revokeObjectURL(blobUrl);
+            }, 500);
+        });
+
+        function tableToJson(table) {
+            const data = [];
+            let headers = [];
+            for (var i = 0; i < table.rows[0].cells.length; i++) {
+                headers[i] = table.rows[0].cells[i].innerHTML.toLowerCase().replace(/ /gi, '');
+            }
+            data.push(headers);
+
+            for (var i = 1; i < table.rows.length; i++) {
+
+                var tableRow = table.rows[i];
+                var rowData = {};
+
+                for (var j = 0; j < tableRow.cells.length; j++) {
+
+                    rowData[headers[j]] = tableRow.cells[j].innerHTML;
+
+                }
+
+                data.push(rowData);
+            }
+
+            return data;
+        };
+
+        function callme(){
+            const table = tableToJson($('#dataTable').get(0));
+            let doc = new jsPDF('1', 'pt', 'letter', true);
+            doc.cellInitialize();
+            $.each(table, (i, row) => {
+                $.each(row, (j, cell) => {
+                    if(j=="dato2" | j==1){
+                        doc.cell(1,10,190,20,cell,i);
+                    }
+                    else {
+                        doc.cell(1,10,90,20,cell,i);
+                    }
+                });
+            })
+            doc.save('table.pdf');
+        }
+    </script>
+    <script src="js/exportcsv.js"></script>
+    <script src="js/jquery-3.5.1.min.js"></script>
+    <script src="js/jspdf.js"></script>
+</body>
+
+</html>
