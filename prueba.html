@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css\bootstrap.min.css">
+    <script src="js/jquery-3.5.1.min.js"></script>
+    <script src="js/dist/Chart.bundle.min.js"></script>
+    <script src="js/exportcsv.js"></script>
+    <script src="js/jspdf.js"></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="container" id="pdf">
+        <div id="canvas-container" class="container" style="width: 50%;">
+            <div class="row">
+                <div class="col-sm-6">
+                    <canvas id="chart" width="500" height="500"></canvas>
+                </div>
+
+                <div class="col-sm-6">
+                    <canvas id="chart2" width="500" height="500"></canvas>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="container">
+            <div class="row justify-content-sm-center">
+                <div class="col-sm-8">
+                    <table id="dataTable" class="table">
+                        <thead>
+                            <tr>
+                                <th>dato1</th>
+                                <th>dato2</th>
+                                <th>dato3</th>
+                                <th>dato4</th>
+                                <th>dato5</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1111</td>
+                                <td>2222</td>
+                                <td>3333</td>
+                                <td>4444</td>
+                                <td>5555</td>
+                            </tr>
+                            <tr>
+                                <td>1111</td>
+                                <td>2222</td>
+                                <td>3333</td>
+                                <td>4444</td>
+                                <td>5555</td>
+                            </tr>
+                            <tr>
+                                <td>1111</td>
+                                <td>2222</td>
+                                <td>3333</td>
+                                <td>4444</td>
+                                <td>5555</td>
+                            </tr>
+                            <tr>
+                                <td>1111</td>
+                                <td>2222</td>
+                                <td>3333</td>
+                                <td>4444</td>
+                                <td>5555</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row justify-content-sm-center">
+            <div class="col-sm-2">
+                <a href="javascript:getpdf()" type="button">Exportar pdf</a>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // graficas
+            var datos = {
+                type: "pie",
+                data: {
+                    datasets: [{
+                        data: [
+                            5, 10, 40, 12, 23,
+                        ],
+                        backgroundColor: [
+                            "#FF5733",
+                            "#D8BE62",
+                            "#BCD862",
+                            "#62D8D4",
+                            "#8062D8",
+                        ],
+                    }],
+                    labels: [
+                        "datos 1",
+                        "datos 2",
+                        "datos 3",
+                        "datos 4",
+                        "datos 5",
+                    ]
+                },
+                options: {
+                    responsive: true,
+                }
+            };
+            var datos2 = {
+                labels: ["dato1", "dato2", "dato3", "dato4", "dato5"],
+                datasets: [{
+                    label: "dataset 1",
+                    backgroundColor: [
+                        "#FF5733",
+                        "#D8BE62",
+                        "#BCD862",
+                        "#62D8D4",
+                        "#8062D8",
+                    ],
+                    data: [4, 2, 3, 1, 6]
+                }]
+            };
+
+            var canvas = document.getElementById("chart").getContext("2d");
+            window.pie = new Chart(canvas, datos);
+            var canvas2 = document.getElementById("chart2").getContext("2d")
+            window.bar = new Chart(canvas2, {
+                type: "bar",
+                data: datos2,
+                options: {
+                    elements: {
+                        retangle: {
+                            borderWidth: 1,
+                            borderColor: "rgb(0,255,0)",
+                            borderSkipped: "bottom"
+                        }
+                    },
+                    responsive: true,
+                    title: {
+                        display: true,
+                        text: "prueba grafico"
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+
+            function drandom() {
+                return Math.round(Math.random() * 100);
+            }
+
+            setInterval(() => {
+                var newData2 = [
+                    [drandom(), drandom(), drandom(), drandom(), drandom()]
+                ];
+                $.each(datos2.datasets, (i, dataset) => {
+                    dataset.data = newData2[i];
+                });
+                window.bar.update();
+
+                datos.data.datasets.splice(0);
+                var newData = {
+                    backgroundColor: [
+                        "#FF5733",
+                        "#D8BE62",
+                        "#BCD862",
+                        "#62D8D4",
+                        "#8062D8",
+                    ],
+                    data: [drandom(), drandom(), drandom(), drandom(), drandom()]
+                };
+                datos.data.datasets.push(newData);
+                window.pie.update();
+            }, 5000);
+        });
+
+
+        // generación pdf
+        function getpdf() {
+            //objeto jspdf
+            var doc = new jsPDF('p', 'pt', 'letter');
+            // source tabla
+            var data = $('#dataTable')[0];
+            // source grafica 1
+            var gra1 = document.getElementById("chart");
+            var dataURL = gra1.toDataURL();
+            // source grafica 1
+            var gra2 = document.getElementById("chart2");
+            var dataURL1 = gra2.toDataURL();
+            //  configuraciones tamaño 
+            specialElementHandlers = {
+                '#bypassme': function (element, renderer) {
+                    return true
+                }
+            };
+            margins = {
+                top: 250,
+                bottom: 60,
+                left: 60,
+                width: 700
+            };
+            // incluye imagen grafica 1
+            doc.addImage(dataURL, 'JPEG', 50, 20);
+            // incluye imagen grafica 2
+            doc.addImage(dataURL1, 'JPEG', 320, 20);
+            // captura información del html
+            doc.fromHTML(pdf, margins.left, margins.top, {
+                'width': margins.width,
+                'elemetHandlers' : specialElementHandlers
+            });
+            // descarga pdf
+            doc.save('test.pdf');
+        }
+    </script>
+</body>
+
+</html>
